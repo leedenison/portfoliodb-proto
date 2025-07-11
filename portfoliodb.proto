@@ -1,0 +1,219 @@
+syntax = "proto3";
+
+package portfoliodb;
+
+import "google/protobuf/timestamp.proto";
+
+service PortfolioDB {
+  // Transaction operations
+  rpc UpdateTxs(UpdateTxsRequest) returns (UpdateTxsResponse);
+  rpc GetHoldings(GetHoldingsRequest) returns (GetHoldingsResponse);
+  
+  // Price operations
+  rpc UpdatePrices(UpdatePricesRequest) returns (UpdatePricesResponse);
+  rpc GetPrices(GetPricesRequest) returns (GetPricesResponse);
+  
+  // Loan operations
+  // Not yet implemented
+  // rpc UpdateLoanTerms(UpdateLoanTermsRequest) returns (UpdateLoanTermsResponse);
+  // rpc GetLoanBalances(GetLoanBalancesRequest) returns (GetLoanBalancesResponse);
+  
+  // Instrument operations
+  rpc UpdateInstrument(UpdateInstrumentRequest) returns (UpdateInstrumentResponse);
+}
+
+// Enums
+enum TxType {
+  OTHER = 0;
+  BUY = 1;
+  SELL = 2;
+  DIVIDEND = 3;
+  INTEREST = 4;
+  REINVEST = 5;
+  TRANSFER_IN = 6;
+  TRANSFER_OUT = 7;
+}
+
+enum InstrumentType {
+  UNKNOWN_INSTRUMENT = 0; // Unspecified or unrecognized type
+  STK = 1;                // Equity: Common or preferred stock
+  MF = 2;                 // Mutual fund
+  BOND = 3;               // Corporate or government bond
+  CD = 4;                 // Certificate of deposit
+  OPT = 5;                // Option (standard derivative)
+  FUT = 6;                // Futures contract
+  MFOPT = 7;              // Option on mutual fund
+  CASH = 8;               // Cash equivalent
+  MMF = 9;                // Money market fund
+  IET = 10;               // Exchange-traded instrument (ETF)
+  FIXED = 11;             // Fixed-income schedule (e.g., structured note)
+  MISC = 12;              // Miscellaneous instrument
+}
+
+enum PutCall {
+  PUT = 0;
+  CALL = 1;
+}
+
+enum ErrorCode {
+  OK = 0;
+  UNKNOWN_ERROR = 1;
+}
+
+// Common types
+message DateRange {
+  google.protobuf.Timestamp start_date = 1;
+  google.protobuf.Timestamp end_date = 2;
+}
+
+message Symbol {
+  string domain = 1;
+  string symbol = 2;
+  string exchange = 3;
+}
+
+message Derivative {
+  string underlying_id = 1;
+  google.protobuf.Timestamp expiration_date = 2;
+  PutCall put_call = 3;
+  double strike_price = 4;
+  double mult = 5;
+}
+
+message Instrument {
+  string id = 1;
+  string name = 2;
+  InstrumentType type = 3;
+  optional string currency = 4;
+  optional Derivative derivative = 5;
+  repeated Symbol symbols = 6;
+}
+
+message Tx {
+  string id = 1;
+  string account_id = 2;
+  Instrument instrument = 3;
+  double units = 4;
+  double unit_price = 5;
+  string currency = 6;
+  google.protobuf.Timestamp trade_date = 7;
+  google.protobuf.Timestamp settled_date = 8;
+  TxType tx_type = 9;
+}
+
+message HoldingDenseSeries {
+  string account_id = 1;
+  string instrument_id = 2;
+  google.protobuf.Timestamp start_date = 3;
+  
+  // As a dense timeseries each quantity entry increments the
+  // start_date by one interval (one day)
+  repeated double quantity = 4;
+}
+
+message Price {
+  string instrument_id = 1;
+  double price = 2;
+  google.protobuf.Timestamp date_as_of = 3;
+}
+
+message PriceDenseSeries {
+  string instrument_id = 1;
+  google.protobuf.Timestamp date_as_of = 2;
+
+  // As a dense timeseries each price entry increments the
+  // start_date by one interval (one day)
+  repeated double price = 3;
+}
+
+// Not yet implemented
+// message LoanTerms {
+//   string loan_id = 1;
+//   double principal_amount = 2;
+//   double interest_rate = 3;
+//   string currency = 4;
+//   google.protobuf.Timestamp date = 5;
+//   string loan_type = 6; // MORTGAGE, PERSONAL, etc.
+// }
+// 
+// message LoanBalance {
+//   string loan_id = 1;
+//   double outstanding_balance = 2;
+//   string currency = 3;
+//   google.protobuf.Timestamp date = 4;
+// }
+
+message Error {
+  ErrorCode code = 1;
+  string message = 2;
+} 
+
+// Request/Response types
+message UpdateTxsRequest {
+  DateRange period = 1;
+
+  // Transactions must be in ascending date order.
+  repeated Tx txs = 2;
+}
+
+message UpdateTxsResponse {
+  Error error = 1;
+}
+
+message GetHoldingsRequest {
+  DateRange period = 1;
+}
+
+message GetHoldingsResponse {
+  repeated HoldingDenseSeries holdings = 1;
+  Error error = 2;
+}
+
+message UpdatePricesRequest {
+  DateRange period = 1;
+
+  // Prices must be in ascending date order.
+  repeated Price prices = 2;
+}
+
+message UpdatePricesResponse {
+  Error error = 1;
+}
+
+message GetPricesRequest {
+  DateRange period = 1;
+}
+
+message GetPricesResponse {
+  repeated PriceDenseSeries prices = 1;
+  Error error = 2;
+}
+
+message UpdateInstrumentRequest {
+  Instrument instrument = 1;
+}
+
+message UpdateInstrumentResponse {
+  Error error = 1;
+}
+
+// Not yet implemented
+// message UpdateLoanTermsRequest {
+//   string loan_id = 1;
+//   DateRange period = 2;
+//   repeated LoanTerm loan_terms = 3;
+// }
+// 
+// message UpdateLoanTermsResponse {
+//   Error error = 1;
+// }
+//
+// message GetLoanBalancesRequest {
+//   DateRange period = 1;
+//   repeated string loan_ids = 2;
+// }
+// 
+// message GetLoanBalancesResponse {
+//   repeated LoanBalance loan_balances = 1;
+//   Error error = 2;
+// }
