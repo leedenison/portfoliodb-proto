@@ -70,6 +70,7 @@ message Symbol {
   string domain = 1;
   string symbol = 2;
   string exchange = 3;
+  string description = 4;
 }
 
 message Derivative {
