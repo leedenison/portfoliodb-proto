@@ -84,11 +84,10 @@ message Derivative {
 
 message Instrument {
   string id = 1;
-  string name = 2;
-  InstrumentType type = 3;
-  optional string currency = 4;
-  optional Derivative derivative = 5;
-  repeated Identifier symbols = 6;
+  InstrumentType type = 2;
+  optional string currency = 3;
+  optional Derivative derivative = 4;
+  repeated Identifier symbols = 5;
 }
 
 message Tx {
