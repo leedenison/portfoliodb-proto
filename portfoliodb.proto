@@ -66,11 +66,12 @@ message DateRange {
   google.protobuf.Timestamp end_date = 2;
 }
 
-message Symbol {
-  string domain = 1;
-  string symbol = 2;
-  string exchange = 3;
-  string description = 4;
+message Identifier {
+  string id = 1;
+  string domain = 2;
+  string symbol = 3;
+  string exchange = 4;
+  string description = 5;
 }
 
 message Derivative {
@@ -87,7 +88,7 @@ message Instrument {
   InstrumentType type = 3;
   optional string currency = 4;
   optional Derivative derivative = 5;
-  repeated Symbol symbols = 6;
+  repeated Identifier symbols = 6;
 }
 
 message Tx {
