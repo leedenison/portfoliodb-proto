@@ -208,7 +208,6 @@ message DeleteBrokerResponse {
   Error error = 1;
 }
 
-// Instrument request/response types
 message UpdateInstrumentsRequest {
   repeated Instrument instruments = 1;
 }
