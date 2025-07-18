@@ -13,13 +13,13 @@ service PortfolioDB {
   rpc UpdatePrices(UpdatePricesRequest) returns (UpdatePricesResponse);
   rpc GetPrices(GetPricesRequest) returns (GetPricesResponse);
   
-  // Loan operations
-  // Not yet implemented
-  // rpc UpdateLoanTerms(UpdateLoanTermsRequest) returns (UpdateLoanTermsResponse);
-  // rpc GetLoanBalances(GetLoanBalancesRequest) returns (GetLoanBalancesResponse);
-  
   // Instrument operations
-  rpc UpdateInstrument(UpdateInstrumentRequest) returns (UpdateInstrumentResponse);
+  rpc UpdateInstruments(UpdateInstrumentsRequest) returns (UpdateInstrumentsResponse);
+  rpc DeleteInstrument(DeleteInstrumentRequest) returns (DeleteInstrumentResponse);
+  
+  // Broker operations
+  rpc UpdateBroker(UpdateBrokerRequest) returns (UpdateBrokerResponse);
+  rpc DeleteBroker(DeleteBrokerRequest) returns (DeleteBrokerResponse);
 }
 
 // Enums
@@ -66,12 +66,30 @@ message DateRange {
   google.protobuf.Timestamp end_date = 2;
 }
 
-message Identifier {
+message Broker {
+  string id = 1;
+  string key = 2;
+  string name = 3;
+}
+
+message InstrumentDescription {
+  string id = 1;
+  string broker = 2; // Broker.key
+  string description = 3;
+}
+
+message InstrumentId {
   string id = 1;
   string domain = 2;
-  string symbol = 3;
-  string exchange = 4;
-  string description = 5;
+  string identifier = 3;
+}
+
+message InstrumentSymbol {
+  string id = 1;
+  string domain = 2;
+  string exchange = 3;
+  string symbol = 4;
+  string currency = 5;
 }
 
 message Derivative {
@@ -85,9 +103,10 @@ message Derivative {
 message Instrument {
   string id = 1;
   InstrumentType type = 2;
-  optional string currency = 3;
-  optional Derivative derivative = 4;
-  repeated Identifier symbols = 5;
+  optional Derivative derivative = 3;
+  repeated InstrumentId identifiers = 4;
+  repeated InstrumentSymbol symbols = 5;
+  repeated InstrumentDescription descriptions = 6;
 }
 
 message Tx {
@@ -104,45 +123,28 @@ message Tx {
 
 message HoldingDenseSeries {
   string account_id = 1;
-  string instrument_id = 2;
-  google.protobuf.Timestamp start_date = 3;
+  Instrument instrument = 2;
+  google.protobuf.Timestamp start = 3;
   
   // As a dense timeseries each quantity entry increments the
-  // start_date by one interval (one day)
+  // start date by one interval (one day)
   repeated double quantity = 4;
 }
 
-message Price {
-  string instrument_id = 1;
-  double price = 2;
-  google.protobuf.Timestamp date_as_of = 3;
-}
-
 message PriceDenseSeries {
-  string instrument_id = 1;
-  google.protobuf.Timestamp date_as_of = 2;
+  Instrument instrument = 1;
+  google.protobuf.Timestamp start = 2;
 
   // As a dense timeseries each price entry increments the
-  // start_date by one interval (one day)
+  // start date by one interval (one day)
   repeated double price = 3;
 }
 
-// Not yet implemented
-// message LoanTerms {
-//   string loan_id = 1;
-//   double principal_amount = 2;
-//   double interest_rate = 3;
-//   string currency = 4;
-//   google.protobuf.Timestamp date = 5;
-//   string loan_type = 6; // MORTGAGE, PERSONAL, etc.
-// }
-// 
-// message LoanBalance {
-//   string loan_id = 1;
-//   double outstanding_balance = 2;
-//   string currency = 3;
-//   google.protobuf.Timestamp date = 4;
-// }
+message Price {
+  Instrument instrument = 1;
+  double price = 2;
+  google.protobuf.Timestamp date_as_of = 3;
+}
 
 message Error {
   ErrorCode code = 1;
@@ -190,31 +192,35 @@ message GetPricesResponse {
   Error error = 2;
 }
 
-message UpdateInstrumentRequest {
-  Instrument instrument = 1;
+message UpdateBrokerRequest {
+  Broker broker = 1;
 }
 
-message UpdateInstrumentResponse {
+message UpdateBrokerResponse {
   Error error = 1;
 }
 
-// Not yet implemented
-// message UpdateLoanTermsRequest {
-//   string loan_id = 1;
-//   DateRange period = 2;
-//   repeated LoanTerm loan_terms = 3;
-// }
-// 
-// message UpdateLoanTermsResponse {
-//   Error error = 1;
-// }
-//
-// message GetLoanBalancesRequest {
-//   DateRange period = 1;
-//   repeated string loan_ids = 2;
-// }
-// 
-// message GetLoanBalancesResponse {
-//   repeated LoanBalance loan_balances = 1;
-//   Error error = 2;
-// }
+message DeleteBrokerRequest {
+  string broker_id = 1;
+}
+
+message DeleteBrokerResponse {
+  Error error = 1;
+}
+
+// Instrument request/response types
+message UpdateInstrumentsRequest {
+  repeated Instrument instruments = 1;
+}
+
+message UpdateInstrumentsResponse {
+  Error error = 1;
+}
+
+message DeleteInstrumentRequest {
+  string instrument_id = 1;
+}
+
+message DeleteInstrumentResponse {
+  Error error = 1;
+}
