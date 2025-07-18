@@ -1,0 +1,225 @@
+syntax = "proto3";
+
+package portfoliodb;
+
+import "google/protobuf/timestamp.proto";
+
+service PortfolioDB {
+  // Transaction operations
+  rpc UpdateTxs(UpdateTxsRequest) returns (UpdateTxsResponse);
+  rpc GetHoldings(GetHoldingsRequest) returns (GetHoldingsResponse);
+  
+  // Price operations
+  rpc UpdatePrices(UpdatePricesRequest) returns (UpdatePricesResponse);
+  rpc GetPrices(GetPricesRequest) returns (GetPricesResponse);
+  
+  // Instrument operations
+  rpc UpdateInstruments(UpdateInstrumentsRequest) returns (UpdateInstrumentsResponse);
+  rpc DeleteInstrument(DeleteInstrumentRequest) returns (DeleteInstrumentResponse);
+  
+  // Broker operations
+  rpc UpdateBroker(UpdateBrokerRequest) returns (UpdateBrokerResponse);
+  rpc DeleteBroker(DeleteBrokerRequest) returns (DeleteBrokerResponse);
+}
+
+// Enums
+enum TxType {
+  OTHER = 0;
+  BUY = 1;
+  SELL = 2;
+  DIVIDEND = 3;
+  INTEREST = 4;
+  REINVEST = 5;
+  TRANSFER_IN = 6;
+  TRANSFER_OUT = 7;
+}
+
+enum InstrumentType {
+  UNKNOWN_INSTRUMENT = 0; // Unspecified or unrecognized type
+  STK = 1;                // Equity: Common or preferred stock
+  MF = 2;                 // Mutual fund
+  BOND = 3;               // Corporate or government bond
+  CD = 4;                 // Certificate of deposit
+  OPT = 5;                // Option (standard derivative)
+  FUT = 6;                // Futures contract
+  MFOPT = 7;              // Option on mutual fund
+  CASH = 8;               // Cash equivalent
+  MMF = 9;                // Money market fund
+  IET = 10;               // Exchange-traded instrument (ETF)
+  FIXED = 11;             // Fixed-income schedule (e.g., structured note)
+  MISC = 12;              // Miscellaneous instrument
+}
+
+enum PutCall {
+  PUT = 0;
+  CALL = 1;
+}
+
+enum ErrorCode {
+  OK = 0;
+  UNKNOWN_ERROR = 1;
+}
+
+// Common types
+message DateRange {
+  google.protobuf.Timestamp start_date = 1;
+  google.protobuf.Timestamp end_date = 2;
+}
+
+message Broker {
+  string id = 1;
+  string key = 2;
+  string name = 3;
+}
+
+message InstrumentDescription {
+  string id = 1;
+  string broker = 2; // Broker.key
+  string description = 3;
+}
+
+message InstrumentId {
+  string id = 1;
+  string domain = 2;
+  string identifier = 3;
+}
+
+message InstrumentSymbol {
+  string id = 1;
+  string domain = 2;
+  string exchange = 3;
+  string symbol = 4;
+  string currency = 5;
+}
+
+message Derivative {
+  string underlying_id = 1;
+  google.protobuf.Timestamp expiration_date = 2;
+  PutCall put_call = 3;
+  double strike_price = 4;
+  double mult = 5;
+}
+
+message Instrument {
+  string id = 1;
+  InstrumentType type = 2;
+  optional Derivative derivative = 3;
+  repeated InstrumentId identifiers = 4;
+  repeated InstrumentSymbol symbols = 5;
+  repeated InstrumentDescription descriptions = 6;
+}
+
+message Tx {
+  string id = 1;
+  string account_id = 2;
+  Instrument instrument = 3;
+  double units = 4;
+  double unit_price = 5;
+  string currency = 6;
+  google.protobuf.Timestamp trade_date = 7;
+  google.protobuf.Timestamp settled_date = 8;
+  TxType tx_type = 9;
+}
+
+message HoldingDenseSeries {
+  string account_id = 1;
+  Instrument instrument = 2;
+  google.protobuf.Timestamp start = 3;
+  
+  // As a dense timeseries each quantity entry increments the
+  // start date by one interval (one day)
+  repeated double quantity = 4;
+}
+
+message PriceDenseSeries {
+  Instrument instrument = 1;
+  google.protobuf.Timestamp start = 2;
+
+  // As a dense timeseries each price entry increments the
+  // start date by one interval (one day)
+  repeated double price = 3;
+}
+
+message Price {
+  Instrument instrument = 1;
+  double price = 2;
+  google.protobuf.Timestamp date_as_of = 3;
+}
+
+message Error {
+  ErrorCode code = 1;
+  string message = 2;
+} 
+
+// Request/Response types
+message UpdateTxsRequest {
+  DateRange period = 1;
+
+  // Transactions must be in ascending date order.
+  repeated Tx txs = 2;
+}
+
+message UpdateTxsResponse {
+  Error error = 1;
+}
+
+message GetHoldingsRequest {
+  DateRange period = 1;
+}
+
+message GetHoldingsResponse {
+  repeated HoldingDenseSeries holdings = 1;
+  Error error = 2;
+}
+
+message UpdatePricesRequest {
+  DateRange period = 1;
+
+  // Prices must be in ascending date order.
+  repeated Price prices = 2;
+}
+
+message UpdatePricesResponse {
+  Error error = 1;
+}
+
+message GetPricesRequest {
+  DateRange period = 1;
+}
+
+message GetPricesResponse {
+  repeated PriceDenseSeries prices = 1;
+  Error error = 2;
+}
+
+message UpdateBrokerRequest {
+  Broker broker = 1;
+}
+
+message UpdateBrokerResponse {
+  Error error = 1;
+}
+
+message DeleteBrokerRequest {
+  string broker_id = 1;
+}
+
+message DeleteBrokerResponse {
+  Error error = 1;
+}
+
+message UpdateInstrumentsRequest {
+  repeated Instrument instruments = 1;
+}
+
+message UpdateInstrumentsResponse {
+  Error error = 1;
+}
+
+message DeleteInstrumentRequest {
+  string instrument_id = 1;
+}
+
+message DeleteInstrumentResponse {
+  Error error = 1;
+}
