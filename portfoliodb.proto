@@ -62,8 +62,8 @@ enum ErrorCode {
 
 // Common types
 message DateRange {
-  google.protobuf.Timestamp start_date = 1;
-  google.protobuf.Timestamp end_date = 2;
+  google.protobuf.Timestamp start = 1;
+  google.protobuf.Timestamp end = 2;
 }
 
 message Broker {
