@@ -12,11 +12,7 @@ service PortfolioDB {
   // Price operations
   rpc UpdatePrices(UpdatePricesRequest) returns (UpdatePricesResponse);
   rpc GetPrices(GetPricesRequest) returns (GetPricesResponse);
-  
-  // Instrument operations
-  rpc UpdateInstruments(UpdateInstrumentsRequest) returns (UpdateInstrumentsResponse);
-  rpc DeleteInstrument(DeleteInstrumentRequest) returns (DeleteInstrumentResponse);
-  
+     
   // Broker operations
   rpc UpdateBroker(UpdateBrokerRequest) returns (UpdateBrokerResponse);
   rpc DeleteBroker(DeleteBrokerRequest) returns (DeleteBrokerResponse);
@@ -72,24 +68,24 @@ message Broker {
   string name = 3;
 }
 
-message InstrumentDescription {
-  string id = 1;
-  string broker = 2; // Broker.key
-  string description = 3;
-}
-
 message InstrumentId {
   string id = 1;
   string domain = 2;
   string identifier = 3;
 }
 
-message InstrumentSymbol {
+message Symbol {
   string id = 1;
   string domain = 2;
   string exchange = 3;
   string symbol = 4;
   string currency = 5;
+}
+
+message SymbolDescription {
+  string id = 1;
+  string broker_key = 2;
+  string description = 3;
 }
 
 message Derivative {
@@ -105,20 +101,20 @@ message Instrument {
   InstrumentType type = 2;
   optional Derivative derivative = 3;
   repeated InstrumentId identifiers = 4;
-  repeated InstrumentSymbol symbols = 5;
-  repeated InstrumentDescription descriptions = 6;
+  repeated Symbol symbols = 5;
 }
 
 message Tx {
   string id = 1;
   string account_id = 2;
-  Instrument instrument = 3;
-  double units = 4;
-  double unit_price = 5;
-  string currency = 6;
-  google.protobuf.Timestamp trade_date = 7;
-  google.protobuf.Timestamp settled_date = 8;
-  TxType tx_type = 9;
+  SymbolDescription description = 3;
+  Symbol symbol = 4;
+  double units = 5;
+  double unit_price = 6;
+  string currency = 7;
+  google.protobuf.Timestamp trade_date = 8;
+  google.protobuf.Timestamp settled_date = 9;
+  TxType tx_type = 10;
 }
 
 message HoldingDenseSeries {
@@ -141,7 +137,7 @@ message PriceDenseSeries {
 }
 
 message Price {
-  Instrument instrument = 1;
+  Symbol symbol = 1;
   double price = 2;
   google.protobuf.Timestamp date_as_of = 3;
 }
@@ -153,9 +149,8 @@ message Error {
 
 // Request/Response types
 message UpdateTxsRequest {
+  // Date range for the update
   DateRange period = 1;
-
-  // Transactions must be in ascending date order.
   repeated Tx txs = 2;
 }
 
@@ -174,8 +169,6 @@ message GetHoldingsResponse {
 
 message UpdatePricesRequest {
   DateRange period = 1;
-
-  // Prices must be in ascending date order.
   repeated Price prices = 2;
 }
 
@@ -205,21 +198,5 @@ message DeleteBrokerRequest {
 }
 
 message DeleteBrokerResponse {
-  Error error = 1;
-}
-
-message UpdateInstrumentsRequest {
-  repeated Instrument instruments = 1;
-}
-
-message UpdateInstrumentsResponse {
-  Error error = 1;
-}
-
-message DeleteInstrumentRequest {
-  string instrument_id = 1;
-}
-
-message DeleteInstrumentResponse {
   Error error = 1;
 }
