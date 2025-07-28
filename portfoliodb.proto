@@ -46,6 +46,11 @@ enum InstrumentType {
   MISC = 12;              // Miscellaneous instrument
 }
 
+enum DerivativeType {
+  OPTION = 0;
+  FUTURE = 1;
+}
+
 enum PutCall {
   PUT = 0;
   CALL = 1;
@@ -90,10 +95,11 @@ message SymbolDescription {
 
 message Derivative {
   string underlying_id = 1;
-  google.protobuf.Timestamp expiration_date = 2;
-  PutCall put_call = 3;
-  double strike_price = 4;
-  double mult = 5;
+  DerivativeType type = 2;
+  google.protobuf.Timestamp expiration_date = 3;
+  PutCall put_call = 4;
+  double strike_price = 5;
+  double mult = 6;
 }
 
 message Instrument {
@@ -110,10 +116,10 @@ message Tx {
   SymbolDescription description = 3;
   Symbol symbol = 4;
   double units = 5;
-  double unit_price = 6;
+  optional double unit_price = 6;
   string currency = 7;
   google.protobuf.Timestamp trade_date = 8;
-  google.protobuf.Timestamp settled_date = 9;
+  optional google.protobuf.Timestamp settled_date = 9;
   TxType tx_type = 10;
 }
 
