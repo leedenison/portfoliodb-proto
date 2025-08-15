@@ -7,15 +7,6 @@ import "google/protobuf/timestamp.proto";
 service PortfolioDB {
   // Transaction operations
   rpc UpdateTxs(UpdateTxsRequest) returns (UpdateTxsResponse);
-  rpc GetHoldings(GetHoldingsRequest) returns (GetHoldingsResponse);
-  
-  // Price operations
-  rpc UpdatePrices(UpdatePricesRequest) returns (UpdatePricesResponse);
-  rpc GetPrices(GetPricesRequest) returns (GetPricesResponse);
-     
-  // Broker operations
-  rpc UpdateBroker(UpdateBrokerRequest) returns (UpdateBrokerResponse);
-  rpc DeleteBroker(DeleteBrokerRequest) returns (DeleteBrokerResponse);
 }
 
 // Enums
@@ -56,6 +47,13 @@ enum PutCall {
   CALL = 1;
 }
 
+enum OptionStyle {
+  UNKNOWN = 0;
+  AMERICAN = 1;
+  EUROPEAN = 2;
+  BERMUDAN = 3;
+}
+
 enum ErrorCode {
   OK = 0;
   UNKNOWN_ERROR = 1;
@@ -73,79 +71,45 @@ message Broker {
   string name = 3;
 }
 
-message InstrumentId {
+message Identifier {
   string id = 1;
-  string domain = 2;
-  string identifier = 3;
-}
-
-message Symbol {
-  string id = 1;
-  string domain = 2;
-  string exchange = 3;
-  string symbol = 4;
-  string currency = 5;
-}
-
-message SymbolDescription {
-  string id = 1;
-  string broker_key = 2;
-  string description = 3;
-}
-
-message Derivative {
-  string underlying_id = 1;
-  DerivativeType type = 2;
-  google.protobuf.Timestamp expiration_date = 3;
-  PutCall put_call = 4;
-  double strike_price = 5;
-  double mult = 6;
+  string namespace = 2;
+  string domain = 3;
+  string identifier = 4;
 }
 
 message Instrument {
   string id = 1;
   InstrumentType type = 2;
-  optional Derivative derivative = 3;
-  repeated InstrumentId identifiers = 4;
-  repeated Symbol symbols = 5;
+  repeated Identifier identifiers = 3;
+  string listing_mic = 4;
+  string currency = 5;
+  optional Derivative derivative = 6;
+}
+
+message Derivative {
+  Identifier underlying_id = 1;
+  optional Option option = 2;
+}
+
+message Option {
+  google.protobuf.Timestamp expiration_date = 1;
+  PutCall put_call = 2;
+  double strike_price = 3;
+  double mult = 4;
+  OptionStyle style = 5;
 }
 
 message Tx {
   string id = 1;
   string account_id = 2;
-  SymbolDescription description = 3;
-  Symbol symbol = 4;
-  double units = 5;
-  optional double unit_price = 6;
-  string currency = 7;
-  google.protobuf.Timestamp trade_date = 8;
-  optional google.protobuf.Timestamp settled_date = 9;
-  TxType tx_type = 10;
-}
-
-message HoldingDenseSeries {
-  string account_id = 1;
-  Instrument instrument = 2;
-  google.protobuf.Timestamp start = 3;
-  
-  // As a dense timeseries each quantity entry increments the
-  // start date by one interval (one day)
-  repeated double quantity = 4;
-}
-
-message PriceDenseSeries {
-  Instrument instrument = 1;
-  google.protobuf.Timestamp start = 2;
-
-  // As a dense timeseries each price entry increments the
-  // start date by one interval (one day)
-  repeated double price = 3;
-}
-
-message Price {
-  Symbol symbol = 1;
-  double price = 2;
-  google.protobuf.Timestamp date_as_of = 3;
+  Identifier identifier = 3;
+  double units = 4;
+  optional double unit_price = 5;
+  string currency = 6;
+  google.protobuf.Timestamp trade_date = 7;
+  optional google.protobuf.Timestamp settled_date = 8;
+  TxType tx_type = 9;
 }
 
 message Error {
@@ -157,52 +121,11 @@ message Error {
 message UpdateTxsRequest {
   // Date range for the update
   DateRange period = 1;
-  repeated Tx txs = 2;
+  Broker broker = 2;
+  repeated Instrument instruments = 3;
+  repeated Tx txs = 4;
 }
 
 message UpdateTxsResponse {
-  Error error = 1;
-}
-
-message GetHoldingsRequest {
-  DateRange period = 1;
-}
-
-message GetHoldingsResponse {
-  repeated HoldingDenseSeries holdings = 1;
-  Error error = 2;
-}
-
-message UpdatePricesRequest {
-  DateRange period = 1;
-  repeated Price prices = 2;
-}
-
-message UpdatePricesResponse {
-  Error error = 1;
-}
-
-message GetPricesRequest {
-  DateRange period = 1;
-}
-
-message GetPricesResponse {
-  repeated PriceDenseSeries prices = 1;
-  Error error = 2;
-}
-
-message UpdateBrokerRequest {
-  Broker broker = 1;
-}
-
-message UpdateBrokerResponse {
-  Error error = 1;
-}
-
-message DeleteBrokerRequest {
-  string broker_id = 1;
-}
-
-message DeleteBrokerResponse {
   Error error = 1;
 }
